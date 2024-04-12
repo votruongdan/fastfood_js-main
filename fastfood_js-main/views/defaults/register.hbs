@@ -1,0 +1,73 @@
+<div class="row justify-content-center">
+    <div class="col-sm col-5">
+        <h3 class="text-center mt-5 mb-3">ĐĂNG KÝ</h3>
+        <form id="form-register" class="form-floating">
+            <div class="d-flex justify-content-between mb-3">
+                <div class="form-floating flex-fill me-1">
+                    <input type="text" class="form-control" name="first_name" id="first_name" placeholder="">
+                    <label for="first_name">Firt name</label>
+                </div>
+                <div class="form-floating flex-fill ms-1">
+                    <input type="text" class="form-control" name="last_name" id="last_name" placeholder="">
+                    <label for="last_name">Last name</label>
+                </div>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="email" class="form-control" name="email" id="email" placeholder="">
+                <label for="email">Email</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="password" class="form-control" name="password" id="password" placeholder="">
+                <label for="inputPassword">Password</label>
+            </div>
+            <div class="form-group text-center mb-3">
+                <button type="submit" class="btn btn-primary text-center">Đăng Ký</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $(document).ready(function () { });
+
+    $('#form-register').submit(function (e) {
+        e.preventDefault();
+        let formData = {
+            first_name: $('#first_name').val(),
+            last_name: $('#last_name').val(),
+            email: $('#email').val(),
+            password: $('#password').val()
+        };
+        $.ajax({
+            url: '/api/register',
+            type: 'POST',
+            data: formData,
+            success: (res) => {
+                if (res.success) {
+                    $('#first_name').val('');
+                    $('#last_name').val('');
+                    $('#email').val('');
+                    $('#password').val('');
+                    toast({
+                        title: "Thành công!",
+                        message: "Bạn đã đăng ký tài khoản thành công.",
+                        type: "success",
+                        duration: 5000
+                    });
+                } else {
+                    toast({
+                        title: "Thất bại!",
+                        message: res.message,
+                        type: "error",
+                        duration: 5000
+                    });
+                }
+            },
+            error: () => {
+                console.log('ERROR');
+            }
+        });
+    });
+    $('input').on('input', function () {
+        $('.text-danger').empty();
+    })
+</script>

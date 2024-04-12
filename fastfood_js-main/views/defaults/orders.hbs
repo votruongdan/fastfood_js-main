@@ -1,0 +1,138 @@
+<div class="row justify-content-center">
+    <div class="col-9">
+        <h3 class="text-center mb-3">LIST ORDER</h3>
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" name="searchKey" id="inputSearch" placeholder=""
+                    style="width: 300px;">
+                <label for="inputSearch">Enter search keyword...</label>
+            </div>
+        </div>
+        <table id="tbl-Orders" class="table table-bordered text-center">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Tên Khách Hàng</th>
+                    <th scope="col">Tổng</th>
+                    <th scope="col">Ngày Tạo</th>
+                    <th scope="col">Trạng Thái</th>
+                    <th scope="col">Chi Tiết</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+<script>
+    var timer;
+    var page = 1;
+    $(document).ready(function () {
+        loadData('', 1);
+    })
+    $('#inputSearch').on('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            loadData($(this).val(), 1);
+        }, 500);
+    })
+    function loadData(searchKey, page) {
+        $.ajax({
+            url: '/api/orders',
+            data: { searchKey, page },
+            type: 'GET',
+            success: (res) => {
+                if (res.success) {
+                    $('#tbl-Orders').find('tbody').empty();
+                    $(res.orders).each(function (i, v) {
+                        $('#tbl-Orders').find('tbody').append(
+                            createRow(
+                                v.id, (i + 1), v.name, v.total, v.status, v.createdAt
+                            )
+                        );
+                    });
+                }
+            },
+            error: () => { }
+        });
+    }
+    $(document).on('click', '#btnInfor', function () {
+        let id = $(this).closest('tr').data('id');
+        $.ajax({
+            url: '/api/order-detail',
+            data: { id },
+            type: 'GET',
+            success: (res) => {
+                if (res.success) {
+                    showModal('Chi Tiết Đơn Hàng',
+                        createBox(
+                            res.detail[0].order.content.split('-')[0].trim(),
+                            formattedDate(res.detail[0].order.createdAt),
+                            res.detail[0].order.status,
+                            res.detail[0].order.content,
+                            res.detail,
+                            res.detail[0].order.total)
+                    );
+                } else {
+                    toast({
+                        title: "Thất bại!",
+                        message: res.message,
+                        type: "error",
+                        duration: 5000
+                    });
+                }
+            },
+            error: () => { }
+        })
+    })
+    function showModal(title, body) {
+        let $this = $('.modal');
+        $this.find('.modal-title').text(title);
+        $this.find('.modal-dialog').addClass('modal-lg');
+        $this.find('.modal-body').empty().append(body);
+        $this.find('.btn-primary').remove();
+        $this.modal('show');
+    }
+    function createBox(name, date, status, content, details, total) {
+        let tableRows = '';
+        $(details).each(function (index, value) {
+            tableRows += `<tr>
+                            <th scope="row">${(index + 1)}</th>
+                            <td>${value.product.name}</td>
+                            <td>${value.quantity}</td>
+                            <td>${formatCurrency(value.price)}</td>
+                            <td>${formatCurrency(value.price * value.quantity)}</td>
+                          </tr>`;
+        })
+        return `<p>Tên Khách Hàng: ${name}</p>
+                <p>Ngày đặt: ${date}</p>
+                <p>Trạng thái: ${status}</p>
+                <p>Ghi chú: ${content}</p>
+                <table id="tbl-Orders" class="table table-bordered text-center">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Sản phẩm</th>
+                            <th scope="col">Số lượng</th>
+                            <th scope="col">Giá</th>
+                            <th scope="col">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+                <p class="text-end fw-bolder">TỔNG: ${formatCurrency(total)}</p>`;
+    }
+    function createRow(id, index, name, total, status, date) {
+        return `<tr data-id='${id}'>
+                    <th scope="row">${index}</th>
+                    <td>${name}</td>
+                    <td>${formatCurrency(total)}</td>
+                    <td>${formattedDate(date)}</td>
+                    <td>${status}</td>
+                    <td>
+                        <button id="btnInfor" type="button" class="btn btn-info">
+                            <i class="fas fa-info"></i>
+                        </button>
+                    </td>
+                </tr>`;
+    }
+</script>

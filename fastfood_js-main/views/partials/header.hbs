@@ -1,0 +1,96 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-5">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">FF</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="/">Trang Chủ</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Link</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav mb-2 mb-lg-0 nav-right">
+                <a type="button" class="btn btn-dark position-relative" style="font-size: 18px;" href="/Cart">
+                    <i class="bi bi-cart3"></i>
+                    <span id="count-cart"
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+                </a>
+            </ul>
+        </div>
+    </div>
+</nav>
+<script>
+    $(document).ready(function () {
+        getUser();
+        countCart();
+        logout();
+    })
+    function getUser() {
+        $.ajax({
+            url: '/api/get-name-user',
+            type: 'GET',
+            success: (res) => {
+                if (res.success) {
+                    $('.nav-right').append(`<li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Xin chào, ${res.first_name + ' ' + res.last_name}
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li>
+                                <a class="dropdown-item" href="/information">
+                                Thông tin cá nhân
+                                </a>
+                            </li>
+                            ${res.role ? `<li><a class="dropdown-item" href="/product">Sản Phẩm</a></li>
+                            <li><a class="dropdown-item" href="/category">Thể Loại</a></li>` : ''}
+                            <li><a class="dropdown-item" href="/orders">Đơn Hàng</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" id="btnLogout" href="#">Đăng Xuất</a></li>
+                        </ul>
+                    </li>`);
+                } else {
+                    $('.nav-right').append(` <li class="nav-item">
+                        <a class="nav-link" href="/login">Đăng Nhập</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/register">Đăng Ký</a>
+                    </li>`);
+                }
+            },
+            error: () => {
+                console.log('ERROR');
+            }
+        });
+    }
+    function countCart() {
+        $.ajax({
+            url: '/api/count-cart',
+            data: 'GET',
+            success: (res) => {
+                if (res.success) {
+                    $('#count-cart').text(res.total);
+                }
+            },
+            error: () => { }
+        });
+    }
+    function logout() {
+        $(document).on('click', '#btnLogout', function () {
+            $.ajax({
+                url: '/api/logout',
+                type: 'POST',
+                success: () => {
+                    window.location.href = '/';
+                }
+            })
+        });
+    }
+</script>

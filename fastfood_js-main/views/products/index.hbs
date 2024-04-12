@@ -1,0 +1,122 @@
+<div class="row justify-content-center">
+    <div class="col-10">
+        <h3 class="text-center mb-3">LIST PRODUCT</h3>
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex">
+                <div class="form-floating mb-3 me-2">
+                    <select class="form-select" id="category" name="category" aria-label="Floating label select example"
+                        style="width: 120px;">
+                    </select>
+                    <label for="category">Categories</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" name="searchKey" id="inputSearch" placeholder=""
+                        style="width: 300px;">
+                    <label for="inputSearch">Enter search keyword...</label>
+                </div>
+            </div>
+            <a href="/product/update" class="btn btn-primary">CREATE</a>
+        </div>
+        <table class="table table-bordered text-center">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col" style="width: 320px;">Image</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+<script>
+    $(document).ready(() => {
+        //loadData($('#inputSearch').val());
+        loadData();
+        loadCategories();
+    });
+
+    function loadData() {
+        $.ajax({
+            url: '/api/Products',
+            //data: {search},
+            type: 'GET',
+            success: (res) => {
+                if (res.success) {
+                    $('tbody').empty();
+                    $(res.products).each(function (i, v) {
+                        $('tbody').append(createRow(v._id, (i + 1), v.name, v.img, v.price, v.category.name));
+                    });
+                }
+            }
+        });
+    }
+    function loadCategories() {
+        $.ajax({
+            url: '/api/categories',
+            type: 'GET',
+            success: (res) => {
+                if (res.success) {
+                    $('.form-select').empty().append(`<option value="">All</option>`);
+                    $(res.categories).each(function (i, v) {
+                        $('.form-select').append(
+                            `<option value="${v._id}">${v.name}</option>`
+                        );
+                    });
+                }
+            }
+        });
+    }
+    $('#inputSearch').on('input', function () {
+        loadData($(this).val());
+    })
+
+    $(document).on('click', '#btnRemoveProduct', function () {
+        let id = $(this).closest('tr').data('id');
+        $.ajax({
+            url: '/api/remove-product',
+            data: { id },
+            type: 'POST',
+            success: (res) => {
+                if (res.success) {
+                    toast({
+                        title: "Thành công!",
+                        message: res.message,
+                        type: "success",
+                        duration: 5000
+                    });
+                    loadData();
+                } else {
+                    toast({
+                        title: "Thất bại!",
+                        message: res.message,
+                        type: "error",
+                        duration: 5000
+                    });
+                }
+            },
+            error: () => { }
+        });
+    })
+
+    function createRow(id, index, name, image, price, category) {
+        return `<tr data-id='${id}'>
+                        <th scope="row">${index}</th>
+                        <td>${name}</td>
+                        <td><img src="/img/${image}" alt="${name}" width="320px"></td>
+                        <td>${formatCurrency(price)}</td>
+                        <td>${category}</td>
+                        <td>
+                            <a href="/product/update?id=${id}" class="btn btn-success">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <button id="btnRemoveProduct" type="button" class="btn btn-danger">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+    }
+</script>

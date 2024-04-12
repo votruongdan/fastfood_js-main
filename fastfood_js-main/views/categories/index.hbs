@@ -1,0 +1,151 @@
+<div class="row justify-content-center">
+    <div class="col-6">
+
+        <h3 class="text-center mb-3">LIST CATEGORY</h3>
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" name="searchKey" id="inputSearch" placeholder=""
+                    style="width: 300px;">
+                <label for="inputSearch">Enter search keyword...</label>
+            </div>
+            <a href="#" id="btnCreateCategory" class="btn btn-primary">CREATE</a>
+        </div>
+        <table class="table table-bordered text-center">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+<script>
+    var id = '';
+    $(document).ready(() => {
+        //loadData($('#inputSearch').val());
+        loadData();
+    });
+
+    function loadData() {
+        $.ajax({
+            url: '/api/categories',
+            //data: {search},
+            type: 'GET',
+            success: (res) => {
+                if (res.success) {
+                    $('tbody').empty();
+                    $(res.categories).each(function (i, v) {
+                        $('tbody').append(createRow(v._id, (i + 1), v.name));
+                    });
+                }
+            }
+        });
+    }
+    $('#btnCreateCategory').click(function () {
+        id = '';
+        showModal('Create Category',
+            `<div class="form-floating mb-3">
+                <input type="text" class="form-control" id="name" name="name" placeholder="">
+                <label for="name">Name</label>
+            </div>
+        `);
+    });
+    $(document).on('click', '#btnEditCategory', function () {
+        id = $(this).closest('tr').data('id');
+        $.ajax({
+            url: '/api/category',
+            data: { id },
+            type: 'GET',
+            success: (res) => {
+                showModal('Update Category',
+                    `<div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="name" name="name" 
+                        value="${res.category.name}" placeholder="">
+                        <label for="name">Name</label>
+                     </div>`
+                );
+            },
+            error: () => { }
+        })
+    });
+    $(document).on('click', '#btnSave', function () {
+        $.ajax({
+            url: '/api/update-category',
+            data: {
+                id,
+                name: $('#name').val()
+            },
+            type: 'POST',
+            success: (res) => {
+                if (res.success) {
+                    $('.modal').modal('hide');
+                    toast({
+                        title: "Thành công!",
+                        message: res.message,
+                        type: "success",
+                        duration: 5000
+                    });
+                    loadData();
+                } else {
+                    toast({
+                        title: "Thất bại!",
+                        message: res.message,
+                        type: "error",
+                        duration: 5000
+                    });
+                }
+            },
+            error: () => { }
+        })
+    })
+    $(document).on('click', '#btnRemoveCategory', function () {
+        $.ajax({
+            url: '/api/remove-category',
+            data: { id: $(this).closest('tr').data('id') },
+            type: 'POST',
+            success: (res) => {
+                if (res.success) {
+                    toast({
+                        title: "Thành công!",
+                        message: res.message,
+                        type: "success",
+                        duration: 5000
+                    });
+                    loadData();
+                } else {
+                    toast({
+                        title: "Thất bại!",
+                        message: res.message,
+                        type: "error",
+                        duration: 5000
+                    });
+                }
+            },
+            error: () => { }
+        });
+    })
+    function showModal(title, body) {
+        let $this = $('.modal');
+        $this.find('.modal-title').text(title);
+        $this.find('.modal-body').empty().append(body);
+        $this.find('.btn-primary').attr('id', 'btnSave');
+        $this.modal('show');
+    }
+    function createRow(id, index, name) {
+        return `<tr data-id='${id}'>
+                        <th scope="row">${index}</th>
+                        <td>${name}</td>
+                        <td>
+                            <a href="#" id="btnEditCategory" class="btn btn-success">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <button id="btnRemoveCategory" type="button" class="btn btn-danger">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+    }
+</script>

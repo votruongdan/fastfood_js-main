@@ -1,0 +1,150 @@
+<div class="container">
+    <div class="d-flex">
+        <div class="form-floating mb-3 me-2">
+            <select class="form-select" id="category" name="category" aria-label="Floating label select example"
+                style="width: 120px;">
+            </select>
+            <label for="category">Categories</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" name="searchKey" id="inputSearch" placeholder=""
+                style="width: 300px;">
+            <label for="inputSearch">Enter search keyword...</label>
+        </div>
+    </div>
+    <div class="row" id="main">
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        loadData();
+        loadCategories();
+    });
+    function loadData() {
+        $.ajax({
+            url: '/api/products',
+            type: 'GET',
+            success: (data) => {
+                if (data.success) {
+                    $('#main').empty();
+                    $(data.products).each(function (i, e) {
+                        $('#main').append(cardBox(e._id, e.name, e.desc, e.img));
+                    });
+                }
+            }
+        });
+    }
+    function loadCategories() {
+        $.ajax({
+            url: '/api/categories',
+            type: 'GET',
+            success: (res) => {
+                if (res.success) {
+                    $('.form-select').empty().append(`<option value="">All</option>`);
+                    $(res.categories).each(function (i, v) {
+                        $('.form-select').append(
+                            `<option value="${v._id}">${v.name}</option>`
+                        );
+                    });
+                }
+            }
+        });
+    }
+    $(document).on('click', '#btnDetail', function () {
+        let id = $(this).closest('.card-product').data('id');
+        $.ajax({
+            url: '/api/product',
+            type: 'GET',
+            data: { id },
+            success: (res) => {
+                if (res.success) {
+                    let prod = res.product;
+                    showModal(
+                        'Thông Tin Sản Phẩm',
+                        createRow(
+                            prod.img,
+                            prod.name,
+                            prod.price,
+                            prod.category.name,
+                            prod.desc
+                        )
+                    );
+                } else {
+                    toast({
+                        title: "Thất bại!",
+                        message: res.message,
+                        type: "error",
+                        duration: 5000
+                    });
+                }
+            }
+        })
+    })
+
+    $(document).on('click', '#btnAddToCart', function () {
+        let id = $(this).closest('.card-product').data('id');
+        $.ajax({
+            url: '/api/add-to-cart',
+            data: { id },
+            type: 'GET',
+            success: (res) => {
+                if (res.success) {
+                    toast({
+                        title: "Thành công!",
+                        message: res.message,
+                        type: "success",
+                        duration: 5000
+                    });
+                    countCart();
+                }
+            },
+            error: () => { }
+        })
+    })
+    function showModal(title, body) {
+        let $this = $('.modal');
+        $this.find('.btn-primary').remove();
+        $this.find('.modal-title').text(title);
+        $this.find('.modal-body').empty().append(body);
+        $this.find('.modal-dialog').addClass('modal-xl');
+        $this.modal('show');
+    }
+    function createRow(img, name, price, category, desc) {
+        return (`<div class="row">
+                    <div class="col-md-5">
+                        <img src="/img/${img}" alt="${name}" width="450px">
+                    </div>
+                    <div class="col-md-7">
+                        <h1 class="text-dark">${name}</h1>
+                        <h3>Price: <strong class="text-warning">${formatCurrency(price)}</strong></h3>
+                        <h5>Category:
+                            <strong>
+                                <a href="#" class="text-decoration-none">${category}</a>
+                            </strong>
+                        </h5>
+                        <p>Description: ${desc}</p>
+                    </div>
+                </div>`);
+    }
+    function cardBox(id, name, desc, img) {
+        return (`<div class="col-md-3 mb-4 card-product" data-id="${id}">
+                     <div class="card" style="width: 18rem;">
+                         <img src="/img/${img}" 
+                         class="card-img-top" 
+                         alt="${name}" 
+                         height="280px">
+                         <div class="card-body">
+                             <h5 class="card-title">
+                             <a id="btnDetail" href="#" 
+                             class="text-decoration-none">${name}
+                             </a>
+                             </h5>
+                             <p class="card-text">${desc}</p>
+                             <button id="btnAddToCart"
+                              class="btn btn-primary">Thêm vào giỏ hàng
+                             </button>
+                         </div>
+                     </div>
+                 </div>`);
+    }
+</script>

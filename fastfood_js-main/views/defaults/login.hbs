@@ -1,0 +1,53 @@
+<div class="row justify-content-center">
+    <div class="col-sm col-5">
+        <h3 class="text-center mt-5 mb-3">ĐĂNG NHẬP</h3>
+        <form id="form-login" class="form-floating">
+            <div class="form-floating mb-3">
+                <input type="email" class="form-control" name="email" id="email" placeholder="">
+                <label for="email">Email</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="password" class="form-control" name="password" id="password" placeholder="">
+                <label for="inputPassword">Password</label>
+            </div>
+            <div class="form-group text-center mb-3">
+                <button type="submit" class="btn btn-primary text-center">Đăng Nhập</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () { });
+
+    $('#form-login').submit(function (e) {
+        e.preventDefault();
+        let formData = {
+            email: $('#email').val(),
+            password: $('#password').val()
+        };
+        $.ajax({
+            url: '/api/login',
+            type: 'POST',
+            data: formData,
+            success: (res) => {
+                if (res.success) {
+                    window.location.href = '/';
+                } else {
+                    toast({
+                        title: "Thất bại!",
+                        message: res.message,
+                        type: "error",
+                        duration: 5000
+                    });
+                }
+            },
+            error: () => {
+                console.log('ERROR');
+            }
+        });
+    });
+    $('input').on('input', function () {
+        $('.text-danger').empty();
+    })
+</script>

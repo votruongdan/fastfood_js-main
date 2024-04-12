@@ -1,0 +1,140 @@
+<div class="row justify-content-center">
+    <div class="col-sm col-5">
+        <h3 class="text-center mt-5 mb-3">INFORMATION</h3>
+        <form id="form-information" class="form-floating">
+            <div class="d-flex justify-content-between mb-3">
+                <div class="form-floating flex-fill me-1">
+                    <input type="text" class="form-control" name="first_name" id="first_name" placeholder="">
+                    <label for="first_name">Firt name</label>
+                </div>
+                <div class="form-floating flex-fill ms-1">
+                    <input type="text" class="form-control" name="last_name" id="last_name" placeholder="">
+                    <label for="last_name">Last name</label>
+                </div>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="email" class="form-control" name="email" id="email" placeholder="">
+                <label for="email">Email</label>
+            </div>
+
+            <div class="d-flex justify-content-around align-items-center">
+                <div class="form-group text-center mb-3">
+                    <a onclick="openBoxChangePassword()" href="#" class="text-decoration-none">Change Password</a>
+                </div>
+                <div class="form-group text-center mb-3">
+                    <button type="submit" class="btn btn-primary text-center">Save Changes</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        loadData();
+    });
+    function loadData() {
+        $.ajax({
+            url: '/api/get-user',
+            type: 'GET',
+            success: (res) => {
+                if (res.success) {
+                    $('#first_name').val(res.first_name);
+                    $('#last_name').val(res.last_name);
+                    $('#email').val(res.email);
+                } else {
+                    window.location.href = '/';
+                }
+            },
+            error: () => {
+                console.log('ERROR');
+            }
+        })
+    }
+    $('#form-information').submit(function (e) {
+        e.preventDefault();
+        let formData = {
+            first_name: $('#first_name').val(),
+            last_name: $('#last_name').val(),
+            email: $('#email').val(),
+        };
+        $.ajax({
+            url: '/api/change-infor',
+            type: 'POST',
+            data: formData,
+            success: (res) => {
+                if (res.success) {
+                    toast({
+                        title: "Thành công!",
+                        message: "Bạn đã thay đổi thông tin thành công.",
+                        type: "success",
+                        duration: 5000
+                    });
+                } else {
+                    toast({
+                        title: "Thất bại!",
+                        message: res.message,
+                        type: "error",
+                        duration: 5000
+                    });
+                }
+            },
+            error: () => {
+                console.log('ERROR');
+            }
+        });
+    });
+    function openBoxChangePassword() {
+        let $this = $('.modal');
+        $this.find('.modal-title').text('Change Password');
+        $this.find('.modal-body').empty().append(`
+        <div class="form-floating mb-3">
+            <input type="password" class="form-control" name="current_password" id="current_password" placeholder="">
+            <label for="current_password">Current Password</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="password" class="form-control" name="new_password" id="new_password" placeholder="">
+            <label for="new_password">New Password</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="password" class="form-control" name="confirm_password" id="confirm_password" placeholder="">
+            <label for="confirm_password">Confirm New Password</label>
+        </div>`);
+        $this.find('.btn-primary').attr('id', 'btnChangePassword');
+        $this.modal('show');
+    }
+    $(document).on('click', '#btnChangePassword', function () {
+        $.ajax({
+            url: '/api/change-password',
+            type: 'POST',
+            data: {
+                current_password: $('#current_password').val(),
+                new_password: $('#new_password').val(),
+                confirm_password: $('#confirm_password').val()
+            },
+            success: (res) => {
+                if (res.success) {
+                    toast({
+                        title: "Thành công!",
+                        message: "Bạn đã thay đổi mật khẩu thành công.",
+                        type: "success",
+                        duration: 5000
+                    });
+                    $('.modal').modal('hide');
+                } else {
+                    toast({
+                        title: "Thất bại!",
+                        message: res.message,
+                        type: "error",
+                        duration: 5000
+                    });
+                }
+            },
+            error: () => {
+                console.log('ERROR');
+            }
+        });
+    })
+    $('input').on('input', function () {
+        $('.text-danger').empty();
+    })
+</script>
